@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Gerenciamento de Orçamentos 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#fff;--bg2:#f5f5f3;--bg3:#efefed;--text:#1a1a1a;--text2:#666;--text3:#999;--border:rgba(0,0,0,.12);--radius:8px;--radius-lg:12px}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg2);color:var(--text);min-height:100vh}
+header{background:var(--bg);border-bottom:.5px solid var(--border);padding:0 2rem;display:flex;align-items:center;gap:10px;height:56px}
+header h1{font-size:15px;font-weight:500}
+.hb{font-size:11px;padding:2px 8px;border-radius:99px;font-weight:500}
+main{max-width:1060px;margin:0 auto;padding:1.5rem}
+.nav{display:flex;gap:8px;margin-bottom:1.5rem;flex-wrap:wrap}
+.nav button{font-size:13px;padding:6px 16px;border-radius:var(--radius);border:.5px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;transition:all .15s}
+.nav button.active{background:var(--text);color:var(--bg);border-color:var(--text)}
+.nav button:hover:not(.active){background:var(--bg3)}
+.section{display:none}.section.active{display:block}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px;margin-bottom:1.5rem}
+.metric{background:var(--bg3);border-radius:var(--radius);padding:1rem}
+.metric .lbl{font-size:12px;color:var(--text2);margin-bottom:4px}
+.metric .val{font-size:20px;font-weight:500;line-height:1.2}
+.metric .sub{font-size:11px;color:var(--text3);margin-top:3px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.card{background:var(--bg);border:.5px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.25rem;margin-bottom:1rem}
+.ct{font-size:13px;font-weight:500;color:var(--text2);margin-bottom:1rem}
+table{width:100%;border-collapse:collapse;font-size:12.5px;table-layout:fixed}
+th{text-align:left;font-size:11.5px;font-weight:500;color:var(--text2);padding:6px 8px;border-bottom:.5px solid var(--border)}
+td{padding:8px;border-bottom:.5px solid var(--border);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg2)}
+.badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:99px;font-weight:500}
+.bg{background:#EAF3DE;color:#3B6D11}.ba{background:#FAEEDA;color:#854F0B}.br{background:#FCEBEB;color:#A32D2D}.bb{background:#E6F1FB;color:#185FA5}.bsi{background:#F1EFE8;color:#5F5E5A}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.fg{display:flex;flex-direction:column;gap:4px}
+.fg label{font-size:12px;color:var(--text2)}
+.fg input,.fg select{font-size:13px;padding:8px 10px;border:.5px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--text);outline:none}
+.fg input:focus,.fg select:focus{border-color:#888}
+.btn-p{background:var(--text);color:var(--bg);border:none;border-radius:var(--radius);padding:9px 22px;font-size:13px;cursor:pointer;font-weight:500}
+.btn-p:hover{opacity:.85}
+.btn-d{background:transparent;border:.5px solid var(--border);color:#A32D2D;border-radius:var(--radius);padding:3px 9px;font-size:12px;cursor:pointer}
+.funnel{display:flex;flex-direction:column;gap:10px;margin-top:4px}
+.fbar{display:flex;align-items:center;gap:10px}
+.flbl{font-size:12px;color:var(--text2);width:110px;text-align:right;flex-shrink:0}
+.ftrack{flex:1;height:28px;background:var(--bg3);border-radius:4px;overflow:hidden}
+.ffill{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:10px;font-size:12px;font-weight:500;color:#fff;transition:width .5s ease}
+.frow{display:flex;align-items:center;gap:8px;margin-bottom:1rem;flex-wrap:wrap}
+.frow input,.frow select{font-size:12px;padding:5px 10px;border:.5px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--text);outline:none}
+.frow input{width:200px}
+@media(max-width:660px){.grid2{grid-template-columns:1fr}.form-row{grid-template-columns:1fr}}
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;z-index:100;padding:1rem}
+.modal{background:var(--bg);border-radius:var(--radius-lg);border:.5px solid var(--border);width:100%;max-width:560px;max-height:90vh;overflow-y:auto}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;border-bottom:.5px solid var(--border)}
+.modal-header h3{font-size:14px;font-weight:500}
+.modal-body{padding:1.25rem}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;padding:.75rem 1.25rem;border-top:.5px solid var(--border);background:var(--bg2);border-radius:0 0 var(--radius-lg) var(--radius-lg)}
+.btn-sec{background:transparent;border:.5px solid var(--border);border-radius:var(--radius);padding:8px 18px;font-size:13px;cursor:pointer;color:var(--text2)}
+.btn-sec:hover{background:var(--bg3)}
+.btn-save{background:#185FA5;color:#fff;border:none;border-radius:var(--radius);padding:8px 20px;font-size:13px;cursor:pointer;font-weight:500}
+.btn-save:hover{opacity:.88}
+.btn-del-modal{background:transparent;border:.5px solid #F09595;color:#A32D2D;border-radius:var(--radius);padding:8px 16px;font-size:13px;cursor:pointer;margin-right:auto}
+.btn-del-modal:hover{background:#FCEBEB}
+tr.edrow{cursor:pointer}
+tr.edrow:hover td{background:#EEF5FF}
+.edit-hint{font-size:11px;color:var(--text3);margin-bottom:.75rem;display:flex;align-items:center;gap:4px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Gerenciamento de Orçamentos</h1>
+  <span class="hb" style="background:#E6F1FB;color:#185FA5">2026</span>
+  <span class="hb" id="save-status" style="background:#EAF3DE;color:#3B6D11">Salvo</span>
+  <div style="margin-left:auto;display:flex;flex-direction:column;gap:5px;align-items:flex-end">
+    <button onclick="resetDados()" style="font-size:12px;padding:4px 12px;border:.5px solid rgba(0,0,0,.15);border-radius:6px;background:transparent;color:#999;cursor:pointer">Resetar dados</button>
+    <button onclick="salvarBackup()" id="btn-backup" style="font-size:12px;padding:4px 12px;border:.5px solid #185FA5;border-radius:6px;background:#E6F1FB;color:#185FA5;cursor:pointer;font-weight:500">Salvar</button>
+  </div>
+</header>
+
+<!-- MODAL EDIÇÃO ORÇAMENTO -->
+<div id="modal-orc" class="modal-backdrop" style="display:none" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-title">Editar orçamento</h3>
+      <button onclick="closeModal()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--text2);line-height:1">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="fg"><label>Nº Orçamento</label><input id="m-noc" type="number" disabled style="background:var(--bg3);color:var(--text2)"/></div>
+        <div class="fg"><label>Data</label><input id="m-data" type="date"/></div>
+      </div>
+      <div class="form-row">
+        <div class="fg"><label>Cliente *</label><input id="m-cli" type="text"/></div>
+        <div class="fg"><label>Cód. Cliente</label><input id="m-cod" type="number"/></div>
+      </div>
+      <div class="form-row">
+        <div class="fg"><label>Contato</label><input id="m-cont" type="text"/></div>
+        <div class="fg"><label>UF</label>
+          <input id="m-uf" type="text" placeholder="Ex: PR"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="fg"><label>Empresa</label>
+          <input id="m-emp" type="text" placeholder="Ex: SOLAR"/>
+        </div>
+        <div class="fg"><label>Valor Total (R$) *</label><input id="m-val" type="number" step="0.01" min="0"/></div>
+      </div>
+      <div class="form-row">
+        <div class="fg"><label>Status</label>
+          <select id="m-stat"><option>Pendente</option><option>Finalizado</option></select>
+        </div>
+        <div class="fg"><label>Follow Up</label><input id="m-fu" type="date"/></div>
+      </div>
+      <div class="fg">
+        <label>Pedido</label><input id="m-ped" type="text" placeholder="Ex: 21800 - Aguard.coleta"/>
+      </div>
+      <div class="fg" style="margin-top:12px">
+        <label>Detalhes / Observação</label><input id="m-det" type="text"/>
+      </div>
+      <p id="m-err" style="font-size:12px;color:#A32D2D;margin-top:10px;min-height:14px"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-del-modal" onclick="delFromModal()">Excluir orçamento</button>
+      <button class="btn-sec" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" onclick="saveModal()">Salvar alterações</button>
+    </div>
+  </div>
+</div>
+
+<main>
+  <div class="nav">
+    <button class="active" onclick="go('dashboard')">Painel</button>
+    <button onclick="go('orcamentos')">Orçamentos</button>
+    <button onclick="go('clientes')">Clientes</button>
+    <button onclick="go('empresas')">Empresas</button>
+    <button onclick="go('novo')">+ Novo orçamento</button>
+  </div>
+
+  <div id="tab-dashboard" class="section active">
+    <div class="metrics" id="mg"></div>
+    <div class="grid2">
+      <div class="card"><div class="ct">Receita mensal — Finalizado vs Pendente</div><div style="position:relative;height:200px"><canvas id="chartR" role="img" aria-label="Receita mensal">Receita mensal 2026.</canvas></div></div>
+      <div class="card"><div class="ct">Funil de status</div><div class="funnel" id="funnel"></div></div>
+    </div>
+    <div class="grid2">
+      <div class="card"><div class="ct">Receita por empresa</div><div style="position:relative;height:200px"><canvas id="chartE" role="img" aria-label="Receita por empresa">Receita por empresa.</canvas></div></div>
+      <div class="card"><div class="ct">Top 5 clientes — valor pendente</div><div id="top5"></div></div>
+    </div>
+  </div>
+
+  <div id="tab-orcamentos" class="section">
+    <div class="card">
+      <div class="frow">
+        <input id="busca" type="text" placeholder="Buscar por nº orçamento, cliente, empresa..." oninput="renderO()"/>
+        <select id="fstat" onchange="renderO()"><option value="">Todos os status</option><option>Finalizado</option><option>Pendente</option></select>
+        <select id="femp" onchange="renderO()"><option value="">Todas as empresas</option><option>SOLAR</option><option>PARANÁ</option><option>TOPFORTE</option><option>GVTECK</option></select>
+        <span id="ocount" style="font-size:12px;color:var(--text3);margin-left:auto"></span>
+      </div>
+      <p class="edit-hint">✎ Clique em qualquer linha para editar o orçamento</p>
+      <table>
+        <thead><tr>
+          <th style="width:6%">Orç</th><th style="width:20%">Cliente</th><th style="width:9%">Empresa</th>
+          <th style="width:8%">Data</th><th style="width:13%">Valor Total</th><th style="width:10%">Status</th>
+          <th style="width:9%">Follow Up</th><th style="width:15%">Detalhes</th><th style="width:10%">UF</th>
+        </tr></thead>
+        <tbody id="otbody"></tbody>
+      </table>
+      <p id="ototals" style="font-size:12px;color:var(--text2);margin-top:12px;text-align:right;padding-top:8px;border-top:.5px solid var(--border)"></p>
+    </div>
+  </div>
+
+  <div id="tab-clientes" class="section">
+    <div class="card">
+      <div class="frow">
+        <input id="busca-cli" type="text" placeholder="Buscar cliente..." oninput="renderC()"/>
+        <select id="fclis" onchange="renderC()"><option value="">Todos</option><option value="fin">Só Finalizados</option><option value="pen">Com Pendentes</option></select>
+      </div>
+      <p class="edit-hint">✎ Clique em um cliente para ver e editar seus orçamentos</p>
+      <table>
+        <thead><tr>
+          <th style="width:25%">Cliente</th><th style="width:14%">Total Geral</th><th style="width:13%">Finalizado</th>
+          <th style="width:13%">Pendente</th><th style="width:8%">Orç.</th><th style="width:14%">Empresa(s)</th><th style="width:13%">Tier</th>
+        </tr></thead>
+        <tbody id="ctbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="tab-empresas" class="section">
+    <div class="metrics" id="emm"></div>
+    <div class="card"><div class="ct">Desempenho detalhado por empresa</div>
+      <table>
+        <thead><tr>
+          <th style="width:14%">Empresa</th><th style="width:17%">Total Geral</th><th style="width:17%">Finalizado</th>
+          <th style="width:17%">Pendente</th><th style="width:8%">Orç.</th><th style="width:14%">% Conversão</th><th style="width:13%">Ticket Médio</th>
+        </tr></thead>
+        <tbody id="etbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="tab-novo" class="section">
+    <div class="card" style="max-width:560px">
+      <div class="ct">Registrar novo orçamento</div>
+      <div class="form-row">
+        <div class="fg"><label>Nº Orçamento *</label><input id="fnoc" type="number" placeholder="Ex: 42800"/></div>
+        <div class="fg"><label>Data *</label><input id="fdata" type="date"/></div>
+      </div>
+      <div class="form-row">
+        <div class="fg"><label>Cliente *</label><input id="fcli" type="text" placeholder="Nome do cliente"/></div>
+        <div class="fg"><label>Cód. Cliente</label><input id="fcod" type="number" placeholder="Código"/></div>
+      </div>
+      <div class="form-row">
+        <div class="fg"><label>Contato</label><input id="fcont" type="text" placeholder="Nome e telefone"/></div>
+        <div class="fg"><label>UF</label><input id="fuf" type="text" placeholder="Ex: PR"/></div>
+      </div>
+      <div class="form-row">
+        <div class="fg"><label>Empresa *</label><input id="fempn" type="text" placeholder="Ex: SOLAR"/></div>
+        <div class="fg"><label>Valor Total (R$) *</label><input id="fval" type="number" placeholder="0.00" min="0" step="0.01"/></div>
+      </div>
+      <div class="form-row">
+        <div class="fg"><label>Status</label><select id="fst"><option>Pendente</option><option>Finalizado</option></select></div>
+        <div class="fg"><label>Follow Up</label><input id="ffu" type="date"/></div>
+      </div>
+      <div class="fg" style="margin-bottom:16px">
+        <label>Detalhes / Observação</label>
+        <input id="fdet" type="text" placeholder="Ex: Negociação, Sem retorno, Time da obra..."/>
+      </div>
+      <button class="btn-p" onclick="addOrc()">Salvar orçamento</button>
+      <p id="fmsg" style="font-size:12px;margin-top:10px;min-height:16px"></p>
+    </div>
+  </div>
+</main>
+<script>
+const DD=[{"Orç": 42565, "Data": "2026-04-08", "Cod.": 14431, "Cliente": "BF01 PARTICIPAC", "Contato": "BRUNO ", "UF": "PR", "Valor Total": 32321.64, "Pedido": null, "NF": null, "Status": "Pendente", "Empresa": "TOPFORTE", "Follow Up": "2026-04-27", "Detalhes": "Negociação "}, {"Orç": 39902, "Data": "2026-03-17", "Cod.": 12196, "Cliente": "J.R. SILVA EMPR", "Contato": "RAFAEL 41-9166-7195", "UF": "PR", "Valor Total": 6272.72, "Pedido": "21776  -  Aguard.coleta  - 6.273,72", "NF": 743, "Status": "Finalizado", "Empresa": "TOPFORTE", "Follow Up": null, "Detalhes": null}, {"Orç": 41940, "Data": "2026-02-23", "Cod.": 1104, "Cliente": "CONSTRUTORA E I", "Contato": "sergio.lim -", "UF": "PR", "Valor Total": 1000, "Pedido": "21612  -  Pendente  - 1.000,00", "NF": null, "Status": "Finalizado", "Empresa": "TOPFORTE", "Follow Up": null, "Detalhes": null}, {"Orç": 42016, "Data": "2026-02-23", "Cod.": 1104, "Cliente": "CONSTRUTORA E I", "Contato": "sergio.lim -", "UF": "PR", "Valor Total": 1000, "Pedido": "21616  -  Aguard.coleta  - 1.000,00", "NF": 732, "Status": "Finalizado", "Empresa": "TOPFORTE", "Follow Up": null, "Detalhes": null}, {"Orç": 41942, "Data": "2026-02-18", "Cod.": 15856, "Cliente": "FABIANO FALVO", "Contato": "JOÃO CARLO 41-99972-5298", "UF": "PR", "Valor Total": 1247.4, "Pedido": "21590  -  Aguard.coleta  - 1.247,40", "NF": 730, "Status": "Finalizado", "Empresa": "TOPFORTE", "Follow Up": null, "Detalhes": null}, {"Orç": 41918, "Data": "2026-02-13", "Cod.": 13203, "Cliente": "OAS BARIGUI EMP", "Contato": "WILLIAM CA 41-9630-5373", "UF": "PR", "Valor Total": 190, "Pedido": "21560  -  Aguard.coleta  - 433,00", "NF": "A20", "Status": "Finalizado", "Empresa": "TOPFORTE", "Follow Up": null, "Detalhes": null}, {"Orç": 41845, "Data": "2026-02-10", "Cod.": 15338, "Cliente": "C.N.T. ENGENHAR", "Contato": "JULIANO 41-99113-2668", "UF": "PR", "Valor Total": 1674, "Pedido": null, "NF": null, "Status": "Finalizado", "Empresa": "TOPFORTE", "Follow Up": null, "Detalhes": null}, {"Orç": 41721, "Data": "2026-02-02", "Cod.": 15036, "Cliente": "FR01 DESENVOLVI", "Contato": "JESSICA CA 41-99164-8448", "UF": "PR", "Valor Total": 3919.88, "Pedido": null, "NF": null, "Status": "Finalizado", "Empresa": "TOPFORTE", "Follow Up": null, "Detalhes": null}, {"Orç": 41463, "Data": "2026-01-16", "Cod.": 13847, "Cliente": "55.857.612 BEAT", "Contato": "ALEX 41-9855-3717", "UF": "PR", "Valor Total": 2664, "Pedido": "21389  -  Aguard.coleta  - 2.664,00", "NF": 717, "Status": "Finalizado", "Empresa": "TOPFORTE", "Follow Up": null, "Detalhes": null}, {"Orç": 41404, "Data": "2026-01-13", "Cod.": 15691, "Cliente": "BS GOLD EMPREEN", "Contato": "HUDY 85-99783-9836", "UF": "CE", "Valor Total": 18662, "Pedido": null, "NF": null, "Status": "Finalizado", "Empresa": "TOPFORTE", "Follow Up": null, "Detalhes": null}, {"Orç": 41407, "Data": "2026-01-13", "Cod.": 15691, "Cliente": "BS GOLD EMPREEN", "Contato": "HUDY 85-99783-9836", "UF": "CE", "Valor Total": 17690, "Pedido": null, "NF": null, "Status": "Finalizado", "Empresa": "TOPFORTE", "Follow Up": null, "Detalhes": null}, {"Orç": 42654, "Data": "2026-04-14", "Cod.": 16049, "Cliente": "REAL PROPRIEDAD", "Contato": "RUI 41-9235-4840", "UF": "PR", "Valor Total": 902.1, "Pedido": "21934  -  Aguard.coleta  - 902,10", "NF": 2432, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 42655, "Data": "2026-04-14", "Cod.": 16049, "Cliente": "REAL PROPRIEDAD", "Contato": "RUI 41-9235-4840", "UF": "PR", "Valor Total": 902.1, "Pedido": "21935  -  Aguard.coleta  - 902,10", "NF": 2433, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 42641, "Data": "2026-04-10", "Cod.": 6040, "Cliente": "PIEMONTE CONSTR", "Contato": "EMERSON LO 41-99849-3366", "UF": "PR", "Valor Total": 22258.6, "Pedido": null, "NF": null, "Status": "Pendente", "Empresa": "SOLAR", "Follow Up": "2026-04-23", "Detalhes": "Negociação "}, {"Orç": 42643, "Data": "2026-04-10", "Cod.": 6040, "Cliente": "PIEMONTE CONSTR", "Contato": "EMERSON LO 41-99849-3366", "UF": "PR", "Valor Total": 86271.5, "Pedido": null, "NF": null, "Status": "Pendente", "Empresa": "SOLAR", "Follow Up": "2026-04-23", "Detalhes": "Negociação "}, {"Orç": 42585, "Data": "2026-04-09", "Cod.": 14285, "Cliente": "PRIDE NOVO MUND", "Contato": "RAFAELA BE 41-99707-4489", "UF": "PR", "Valor Total": 15361.5, "Pedido": null, "NF": null, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 42587, "Data": "2026-04-09", "Cod.": 15238, "Cliente": "IBIZA INCORPORA", "Contato": "THAINA 41-9207-8320", "UF": "PR", "Valor Total": 6826.4, "Pedido": null, "NF": null, "Status": "Pendente", "Empresa": "SOLAR", "Follow Up": "2026-04-23", "Detalhes": "Negociação "}, {"Orç": 42594, "Data": "2026-04-09", "Cod.": 13209, "Cliente": "APTO EDIFICACOE", "Contato": "FAURI CUBAS 41-9188-7885", "UF": "PR", "Valor Total": 8458.59, "Pedido": null, "NF": null, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": "RILDO"}, {"Orç": 42596, "Data": "2026-04-09", "Cod.": 16032, "Cliente": "THE PINEYARDS E", "Contato": "CESAR 41-3320-8903", "UF": "PR", "Valor Total": 21421.84, "Pedido": null, "NF": null, "Status": "Pendente", "Empresa": "SOLAR", "Follow Up": "2026-05-15", "Detalhes": "Negociação "}, {"Orç": 42597, "Data": "2026-04-09", "Cod.": 16032, "Cliente": "THE PINEYARDS E", "Contato": "CESAR 41-3320-8903", "UF": "PR", "Valor Total": 24685.84, "Pedido": null, "NF": null, "Status": "Pendente", "Empresa": "SOLAR", "Follow Up": "2026-05-15", "Detalhes": "Negociação "}, {"Orç": 42598, "Data": "2026-04-09", "Cod.": 15038, "Cliente": "THE SUNSET EMPR", "Contato": "ALISSON MA 41-99735-1370", "UF": "PR", "Valor Total": 2928.5, "Pedido": "21923  -  Aguard.coleta  - 2.928,50", "NF": 2431, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 42566, "Data": "2026-04-08", "Cod.": 14285, "Cliente": "PRIDE NOVO MUND", "Contato": "RAFAELA BE 41-99707-4489", "UF": "PR", "Valor Total": 5120.5, "Pedido": null, "NF": null, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 42501, "Data": "2026-04-07", "Cod.": 13297, "Cliente": "CAMARGO JUNIOR", "Contato": "MARIELA 0-+595 973 537007", "UF": "PR", "Valor Total": 6962.4, "Pedido": "21894  -  Emitir NF  - 6.962,40", "NF": null, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 42535, "Data": "2026-04-07", "Cod.": 12167, "Cliente": "DSAS CONSTRUCAO", "Contato": "HELIO 41-98527-5752", "UF": "PR", "Valor Total": 1572.87, "Pedido": "21893  -  Aguard.coleta  - 1.572,87", "NF": 2430, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 42541, "Data": "2026-04-07", "Cod.": 16018, "Cliente": "RISKALLA FONTAN", "Contato": "ENG. PEDRO 41- 9685-9502", "UF": "PR", "Valor Total": 32236.59, "Pedido": null, "NF": null, "Status": "Pendente", "Empresa": "SOLAR", "Follow Up": "2026-04-23", "Detalhes": "Negociação "}, {"Orç": 42543, "Data": "2026-04-07", "Cod.": 13209, "Cliente": "APTO EDIFICACOE", "Contato": "FAURI CUBAS 41-9188-7885", "UF": "PR", "Valor Total": 25837.17, "Pedido": null, "NF": null, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": "RILDO"}, {"Orç": 42552, "Data": "2026-04-07", "Cod.": 16022, "Cliente": "A.L.O. PARTICIP", "Contato": "ALESSANDRA 41-", "UF": "PR", "Valor Total": 4445, "Pedido": null, "NF": null, "Status": "Pendente", "Empresa": "SOLAR", "Follow Up": "2026-04-23", "Detalhes": "Sem retorno"}, {"Orç": 42498, "Data": "2026-04-02", "Cod.": 14285, "Cliente": "PRIDE NOVO MUND", "Contato": "RAFAELA BE 41-99707-4489", "UF": "PR", "Valor Total": 10164, "Pedido": null, "NF": null, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 42499, "Data": "2026-04-02", "Cod.": 13936, "Cliente": "DEO EMPREENDIME", "Contato": "THAISE 41-9793-0050", "UF": "PR", "Valor Total": 12922, "Pedido": null, "NF": null, "Status": "Pendente", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 42440, "Data": "2026-03-30", "Cod.": 8426, "Cliente": "RENAN SANTOS RO", "Contato": "RENAN 41-99787-9521", "UF": "PR", "Valor Total": 783.36, "Pedido": "21851  -  Emitir NF  - 783,36", "NF": null, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 42377, "Data": "2026-03-25", "Cod.": 10342, "Cliente": "AOF CONSTRUTORA", "Contato": "LEANDRO 47-99931-4229", "UF": "PR", "Valor Total": 2226, "Pedido": null, "NF": null, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 42380, "Data": "2026-03-25", "Cod.": 2150, "Cliente": "IRMAOS THA S/A", "Contato": "JULIA FIOR 41-99841-9722", "UF": "PR", "Valor Total": 67387.04, "Pedido": null, "NF": null, "Status": "Pendente", "Empresa": "SOLAR", "Follow Up": "2026-05-15", "Detalhes": "Concorrência"}, {"Orç": 42369, "Data": "2026-03-24", "Cod.": 15038, "Cliente": "THE SUNSET EMPR", "Contato": "ALISSON MA 41-99735-1370", "UF": "PR", "Valor Total": 2841.75, "Pedido": "21827  -  Aguard.coleta  - 2.841,75", "NF": 2421, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 42373, "Data": "2026-03-24", "Cod.": 2150, "Cliente": "IRMAOS THA S/A", "Contato": "ANDRE SZER 41-98447-6960", "UF": "PR", "Valor Total": 37546.82, "Pedido": null, "NF": null, "Status": "Pendente", "Empresa": "SOLAR", "Follow Up": "2026-05-15", "Detalhes": "Concorrência"}, {"Orç": 42178, "Data": "2026-03-23", "Cod.": 11476, "Cliente": "O3 EMPREENDIMEN", "Contato": "MATHEUS 41-99991-9205", "UF": "PR", "Valor Total": 11050, "Pedido": "21800  -  Aguard.coleta  - 11.050,00", "NF": 2419, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 42355, "Data": "2026-03-23", "Cod.": 15969, "Cliente": "RESIDENCIAL GOA", "Contato": "MARCOS GAR 41-9655-0154", "UF": "PR", "Valor Total": 9323.2, "Pedido": null, "NF": null, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": "CSM"}, {"Orç": 42359, "Data": "2026-03-23", "Cod.": 2150, "Cliente": "IRMAOS THA S/A", "Contato": "VICTORIA C 41-99971-9187", "UF": "PR", "Valor Total": 65533.6, "Pedido": null, "NF": null, "Status": "Pendente", "Empresa": "SOLAR", "Follow Up": "2026-04-25", "Detalhes": "Time da obra"}, {"Orç": 41378, "Data": "2026-03-20", "Cod.": 15690, "Cliente": "EMPREENDIMENTO", "Contato": "VICTORIA C 41-99971-9187", "UF": "PR", "Valor Total": 128741.5, "Pedido": null, "NF": null, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": "2026-04-25", "Detalhes": "Time da obra"}, {"Orç": 41383, "Data": "2026-03-20", "Cod.": 15690, "Cliente": "EMPREENDIMENTO", "Contato": "VICTORIA C 41-99971-9187", "UF": "PR", "Valor Total": 262572.75, "Pedido": null, "NF": null, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": "2026-04-25", "Detalhes": "Time da obra"}, {"Orç": 42339, "Data": "2026-03-20", "Cod.": 2150, "Cliente": "IRMAOS THA S/A", "Contato": "JULIA FIOR 41-99841-9722", "UF": "PR", "Valor Total": 85094.6, "Pedido": null, "NF": null, "Status": "Pendente", "Empresa": "SOLAR", "Follow Up": "2026-05-15", "Detalhes": "Concorrência"}, {"Orç": 42341, "Data": "2026-03-20", "Cod.": 2150, "Cliente": "IRMAOS THA S/A", "Contato": "JULIA FIOR 41-99841-9722", "UF": "PR", "Valor Total": 208125.75, "Pedido": null, "NF": null, "Status": "Pendente", "Empresa": "SOLAR", "Follow Up": "2026-05-15", "Detalhes": "Concorrência"}, {"Orç": 42344, "Data": "2026-03-20", "Cod.": 7894, "Cliente": "AIZA ENGENHARIA", "Contato": "ENG. WESLEY 41-9607-8880", "UF": "PR", "Valor Total": 15460.75, "Pedido": null, "NF": null, "Status": "Pendente", "Empresa": "SOLAR", "Follow Up": "2026-08-03", "Detalhes": "Time da obra "}, {"Orç": 42209, "Data": "2026-03-19", "Cod.": 15038, "Cliente": "THE SUNSET EMPR", "Contato": "ALISSON MA 41-99735-1370", "UF": "PR", "Valor Total": 15364.72, "Pedido": "21790  -  Aguard.coleta  - 15.364,72", "NF": 2418, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 42337, "Data": "2026-03-19", "Cod.": 4758, "Cliente": "TM3 CONSTRUTORA", "Contato": "FLÁVIO M.  41-992243499", "UF": "PR", "Valor Total": 1860, "Pedido": null, "NF": null, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 42307, "Data": "2026-03-17", "Cod.": 15952, "Cliente": "GENOVA EMPREEND", "Contato": "JOEL YOSHI 41-8403-1157", "UF": "PR", "Valor Total": 840, "Pedido": "21770  -  PENDENTE  - 840,00", "NF": null, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 42271, "Data": "2026-03-16", "Cod.": 14285, "Cliente": "PRIDE NOVO MUND", "Contato": "RAFAELA BE 41-99707-4489", "UF": "PR", "Valor Total": 50275.1, "Pedido": null, "NF": null, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 42227, "Data": "2026-03-11", "Cod.": 2568, "Cliente": "HYPERION EMPREE", "Contato": "ÉRICA RAMO 41-98736-8115", "UF": "PR", "Valor Total": 62104.95, "Pedido": null, "NF": null, "Status": "Pendente", "Empresa": "SOLAR", "Follow Up": "2026-04-23", "Detalhes": "Sem retorno"}, {"Orç": 42228, "Data": "2026-03-11", "Cod.": 2568, "Cliente": "HYPERION EMPREE", "Contato": "ÉRICA RAMO 41-98736-8115", "UF": "PR", "Valor Total": 22674.75, "Pedido": null, "NF": null, "Status": "Pendente", "Empresa": "SOLAR", "Follow Up": "2026-04-23", "Detalhes": "Sem retorno"}, {"Orç": 42206, "Data": "2026-03-09", "Cod.": 15916, "Cliente": "RESIDENCIAL NEW", "Contato": "JULIANO 41-99702-2619", "UF": "PR", "Valor Total": 17494, "Pedido": "21863  -  Pendente  - 17.494,00", "NF": null, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 42177, "Data": "2026-03-06", "Cod.": 8563, "Cliente": "LMC CONSTRUCOES", "Contato": "AMORIM 0-", "UF": "PR", "Valor Total": 11800, "Pedido": null, "NF": null, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": "Mandou fazer"}, {"Orç": 42180, "Data": "2026-03-06", "Cod.": 2150, "Cliente": "IRMAOS THA S/A", "Contato": "KAMILE LAD 41-3320-8863", "UF": "PR", "Valor Total": 57931.25, "Pedido": null, "NF": null, "Status": "Pendente", "Empresa": "SOLAR", "Follow Up": "2026-07-02", "Detalhes": "Time da obra"}, {"Orç": 42181, "Data": "2026-03-06", "Cod.": 2150, "Cliente": "IRMAOS THA S/A", "Contato": "KAMILE LAD 41-3320-8863", "UF": "PR", "Valor Total": 15566, "Pedido": null, "NF": null, "Status": "Pendente", "Empresa": "SOLAR", "Follow Up": "2026-07-02", "Detalhes": "Time da obra"}, {"Orç": 42152, "Data": "2026-03-04", "Cod.": 14761, "Cliente": "PIEMONTE P70 RU", "Contato": "WISMITY DE 41-98806-0110", "UF": "PR", "Valor Total": 15580.92, "Pedido": null, "NF": null, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 42119, "Data": "2026-03-02", "Cod.": 15038, "Cliente": "THE SUNSET EMPR", "Contato": "ALISSON MA 41-99735-1370", "UF": "PR", "Valor Total": 2841.75, "Pedido": "21684  -  Aguard.coleta  - 2.841,75", "NF": 2412, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 42079, "Data": "2026-02-26", "Cod.": 15038, "Cliente": "THE SUNSET EMPR", "Contato": "ALISSON MA 41-99735-1370", "UF": "PR", "Valor Total": 644, "Pedido": "21645  -  Aguard.coleta  - 644,00", "NF": 2411, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 42084, "Data": "2026-02-26", "Cod.": 14849, "Cliente": "MRV XCV INCORPO", "Contato": "ANA LÍVIA  43-99959-3893", "UF": "PR", "Valor Total": 29222, "Pedido": null, "NF": null, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 42086, "Data": "2026-02-26", "Cod.": 14849, "Cliente": "MRV XCV INCORPO", "Contato": "ANA LÍVIA  43-99959-3893", "UF": "PR", "Valor Total": 38115.6, "Pedido": null, "NF": null, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 42027, "Data": "2026-02-24", "Cod.": 2150, "Cliente": "IRMAOS THA S/A", "Contato": "ANDRE SZER 41-98447-6960", "UF": "PR", "Valor Total": 201790.5, "Pedido": null, "NF": null, "Status": "Pendente", "Empresa": "SOLAR", "Follow Up": "2026-05-15", "Detalhes": "Concorrência"}, {"Orç": 42031, "Data": "2026-02-24", "Cod.": 2150, "Cliente": "IRMAOS THA S/A", "Contato": "ANDRE SZER 41-98447-6960", "UF": "PR", "Valor Total": 107832, "Pedido": null, "NF": null, "Status": "Pendente", "Empresa": "SOLAR", "Follow Up": "2026-05-15", "Detalhes": "Concorrência"}, {"Orç": 42006, "Data": "2026-02-23", "Cod.": 1104, "Cliente": "CONSTRUTORA E I", "Contato": "MARCELO  41-99188-5007", "UF": "PR", "Valor Total": 1800, "Pedido": "21611  -  Aguard.coleta  - 1.800,00", "NF": 2409, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 42021, "Data": "2026-02-23", "Cod.": 11365, "Cliente": "CONDOMINIO CRYS", "Contato": "AMORIM 41-99653-1755", "UF": "PR", "Valor Total": 10866.4, "Pedido": "21640  -  Aguard.coleta  - 10.866,40", "NF": 2410, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 41941, "Data": "2026-02-18", "Cod.": 15038, "Cliente": "THE SUNSET EMPR", "Contato": "ALISSON MA 41-99735-1370", "UF": "PR", "Valor Total": 900, "Pedido": "21582  -  Aguard.coleta  - 900,00", "NF": 2408, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 41732, "Data": "2026-02-13", "Cod.": 14533, "Cliente": "SUICA FLATS CRI", "Contato": "FABIANO LE 41-99957-5938", "UF": "PR", "Valor Total": 6400, "Pedido": "21562  -  Aguard.coleta  - 6.400,00", "NF": 2405, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 41733, "Data": "2026-02-13", "Cod.": 15794, "Cliente": "82 FERNANDO AMA", "Contato": "FABIANO LE 41-99957-5938", "UF": "PR", "Valor Total": 6800, "Pedido": "21563  -  Aguard.coleta  - 6.800,00", "NF": 2406, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 41887, "Data": "2026-02-11", "Cod.": 15836, "Cliente": "JOSE MIGUEL", "Contato": "RICARDO DU 41-+595 982 477576", "UF": "PR", "Valor Total": 2420, "Pedido": "21580  -  Aguard.coleta  - 2.420,00", "NF": 2407, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 41892, "Data": "2026-02-11", "Cod.": 11476, "Cliente": "O3 EMPREENDIMEN", "Contato": "MATHEUS 41-99991-9205", "UF": "PR", "Valor Total": 53031.5, "Pedido": null, "NF": null, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": "GVTECK"}, {"Orç": 41826, "Data": "2026-02-09", "Cod.": 15038, "Cliente": "THE SUNSET EMPR", "Contato": "ALISSON MA 41-99735-1370", "UF": "PR", "Valor Total": 450, "Pedido": "21533  -  Aguard.coleta  - 450,00", "NF": 2403, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 41764, "Data": "2026-02-04", "Cod.": 2150, "Cliente": "IRMAOS THA S/A", "Contato": "VICTORIA C 41-99971-9187", "UF": "PR", "Valor Total": 71896, "Pedido": null, "NF": null, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 41766, "Data": "2026-02-04", "Cod.": 2150, "Cliente": "IRMAOS THA S/A", "Contato": "VICTORIA C 41-99971-9187", "UF": "PR", "Valor Total": 137290, "Pedido": null, "NF": null, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 41769, "Data": "2026-02-04", "Cod.": 2150, "Cliente": "IRMAOS THA S/A", "Contato": "VICTORIA C 41-99971-9187", "UF": "PR", "Valor Total": 30854.4, "Pedido": null, "NF": null, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 41720, "Data": "2026-02-02", "Cod.": 15038, "Cliente": "THE SUNSET EMPR", "Contato": "ALISSON MA 41-99735-1370", "UF": "PR", "Valor Total": 4875.5, "Pedido": "21500  -  Aguard.coleta  - 4.875,50", "NF": 2399, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 41662, "Data": "2026-01-28", "Cod.": 5977, "Cliente": "CONDOMINIO EDIF", "Contato": "AMORIM 0-", "UF": "PR", "Valor Total": 6825.2, "Pedido": "21467  -  Aguard.coleta  - 6.825,20", "NF": 2394, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 41192, "Data": "2026-01-27", "Cod.": 8612, "Cliente": "COND. DO EDIF.", "Contato": "MAIELLY 41-8501-2206", "UF": "PR", "Valor Total": 5989.7, "Pedido": "21464  -  Aguard.coleta  - 5.810,00", "NF": 2393, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 41635, "Data": "2026-01-27", "Cod.": 15514, "Cliente": "HYPE T104710 SP", "Contato": "LIZZIA 41-98422-7524", "UF": "PR", "Valor Total": 55718.5, "Pedido": null, "NF": null, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 41636, "Data": "2026-01-27", "Cod.": 15587, "Cliente": "DPX INCORPORACO", "Contato": "THIAGO BAH 41-99600-1038", "UF": "PR", "Valor Total": 63720.5, "Pedido": null, "NF": null, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 41637, "Data": "2026-01-27", "Cod.": 15587, "Cliente": "DPX INCORPORACO", "Contato": "THIAGO BAH 41-99600-1038", "UF": "PR", "Valor Total": 65986.75, "Pedido": null, "NF": null, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 41638, "Data": "2026-01-27", "Cod.": 14660, "Cliente": "HYPE T105257 SP", "Contato": "LUIZ KLOC  41-9179-4008", "UF": "PR", "Valor Total": 11101.37, "Pedido": null, "NF": null, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 41608, "Data": "2026-01-26", "Cod.": 15761, "Cliente": "IM LAGUNA SKY G", "Contato": "LUIZ BITTE 41-99992-6841", "UF": "PR", "Valor Total": 26226.3, "Pedido": null, "NF": null, "Status": "Pendente", "Empresa": "SOLAR", "Follow Up": "2026-04-22", "Detalhes": "Negociação "}, {"Orç": 41628, "Data": "2026-01-26", "Cod.": 15514, "Cliente": "HYPE T104710 SP", "Contato": "LIZZIA 41-98422-7524", "UF": "PR", "Valor Total": 47104.75, "Pedido": null, "NF": null, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 41630, "Data": "2026-01-26", "Cod.": 15514, "Cliente": "HYPE T104710 SP", "Contato": "LIZZIA 41-98422-7524", "UF": "PR", "Valor Total": 55718.5, "Pedido": null, "NF": null, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 41631, "Data": "2026-01-26", "Cod.": 15514, "Cliente": "HYPE T104710 SP", "Contato": "LIZZIA 41-98422-7524", "UF": "PR", "Valor Total": 9211.82, "Pedido": null, "NF": null, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 41580, "Data": "2026-01-23", "Cod.": 12658, "Cliente": "LIFESTYLE BARIG", "Contato": "BRUNO MENDES 41-9239-9041", "UF": "PR", "Valor Total": 15600, "Pedido": null, "NF": null, "Status": "Pendente", "Empresa": "SOLAR", "Follow Up": "2026-04-23", "Detalhes": "Sem retorno"}, {"Orç": 41255, "Data": "2026-01-20", "Cod.": 15732, "Cliente": "PIEMONTE P74 CA", "Contato": "ANA HIERRO 41-99899-0297", "UF": "PR", "Valor Total": 16807, "Pedido": null, "NF": null, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": "ELG Telas"}, {"Orç": 41346, "Data": "2026-01-19", "Cod.": 2340, "Cliente": "EQUILIBRIO CONS", "Contato": "CRISTHIANE 41-992094371", "UF": "PR", "Valor Total": 20904.15, "Pedido": "21396  -  Aguard.coleta  - 20.430,00", "NF": 2390, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 41438, "Data": "2026-01-16", "Cod.": 15038, "Cliente": "THE SUNSET EMPR", "Contato": "ALISSON MA 41-99735-1370", "UF": "PR", "Valor Total": 2887.75, "Pedido": "21390  -  Aguard.coleta  - 2.887,75", "NF": 2389, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 41452, "Data": "2026-01-15", "Cod.": 2340, "Cliente": "EQUILIBRIO CONS", "Contato": "CRISTHIANE 41-992094371", "UF": "PR", "Valor Total": 7590.5, "Pedido": null, "NF": null, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 40451, "Data": "2026-01-13", "Cod.": 11476, "Cliente": "O3 EMPREENDIMEN", "Contato": "MATHEUS 41-99991-9205", "UF": "PR", "Valor Total": 46140.75, "Pedido": "21361  -  Aguard.coleta  - 46.140,75", "NF": 2385, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 41371, "Data": "2026-01-12", "Cod.": 14431, "Cliente": "BF01 PARTICIPAC", "Contato": "ALAN RODRI 41-99995-4339", "UF": "PR", "Valor Total": 250584, "Pedido": null, "NF": null, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": "Metroform"}, {"Orç": 41341, "Data": "2026-01-14", "Cod.": 623, "Cliente": "PLAENGE EMPREEN", "Contato": "MARLUS ROS 41-9243-5801", "UF": "PR", "Valor Total": 4610, "Pedido": null, "NF": null, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 41366, "Data": "2026-01-09", "Cod.": 623, "Cliente": "PLAENGE EMPREEN", "Contato": "MARLUS ROS 41-9243-5801", "UF": "PR", "Valor Total": 32303, "Pedido": null, "NF": null, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 41338, "Data": "2026-01-08", "Cod.": 2340, "Cliente": "EQUILIBRIO CONS", "Contato": "CRISTHIANE 41-992094371", "UF": "PR", "Valor Total": 20203.5, "Pedido": null, "NF": null, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 41347, "Data": "2026-01-08", "Cod.": 15682, "Cliente": "BRAK ADMINISTRA", "Contato": "CARLOS ALB 41-999186-8624", "UF": "PR", "Valor Total": 4552.5, "Pedido": null, "NF": null, "Status": "Pendente", "Empresa": "SOLAR", "Follow Up": "2026-05-15", "Detalhes": "Negociação "}, {"Orç": 41297, "Data": "2026-01-06", "Cod.": 14884, "Cliente": "IPBL CARLOS DE", "Contato": "VICTOR 41-99915-5410", "UF": "PR", "Valor Total": 382880, "Pedido": null, "NF": null, "Status": "Pendente", "Empresa": "SOLAR", "Follow Up": "2026-05-10", "Detalhes": "Time da obra"}, {"Orç": 41279, "Data": "2026-01-05", "Cod.": 14884, "Cliente": "IPBL CARLOS DE", "Contato": "VICTOR 41-99915-5410", "UF": "PR", "Valor Total": 107886.5, "Pedido": null, "NF": null, "Status": "Pendente", "Empresa": "SOLAR", "Follow Up": "2026-05-10", "Detalhes": "Time da obra"}, {"Orç": 42564, "Data": "2026-04-08", "Cod.": 14849, "Cliente": "MRV XCV INCORPO", "Contato": "ANA LÍVIA  43-99959-3893", "UF": "PR", "Valor Total": 45203.4, "Pedido": null, "NF": null, "Status": "Pendente", "Empresa": "PARANÁ", "Follow Up": "2026-04-23", "Detalhes": "Negociação "}, {"Orç": 38748, "Data": "2026-03-18", "Cod.": 6945, "Cliente": "CRON ENGENHARIA", "Contato": "CASTRO 41-9978-4293", "UF": "PR", "Valor Total": 37270, "Pedido": null, "NF": null, "Status": "Pendente", "Empresa": "PARANÁ", "Follow Up": "2026-04-23", "Detalhes": "Sem retorno"}, {"Orç": 42093, "Data": "2026-02-27", "Cod.": 14688, "Cliente": "HARVEY 07 EMPRE", "Contato": "ISABELA SC 41-99702-6820", "UF": "PR", "Valor Total": 2079, "Pedido": "21661  -  Aguard.coleta  - 2.079,00", "NF": 4000, "Status": "Finalizado", "Empresa": "PARANÁ", "Follow Up": null, "Detalhes": null}, {"Orç": 40894, "Data": "2026-02-05", "Cod.": 2150, "Cliente": "IRMAOS THA S/A", "Contato": "KAMILE LAD 41-3320-8863", "UF": "PR", "Valor Total": 87515.5, "Pedido": null, "NF": null, "Status": "Pendente", "Empresa": "PARANÁ", "Follow Up": "2026-07-02", "Detalhes": "Time da obra"}, {"Orç": 40895, "Data": "2026-02-05", "Cod.": 2150, "Cliente": "IRMAOS THA S/A", "Contato": "KAMILE LAD 41-3320-8863", "UF": "PR", "Valor Total": 27078, "Pedido": null, "NF": null, "Status": "Pendente", "Empresa": "PARANÁ", "Follow Up": "2026-07-02", "Detalhes": "Time da obra"}, {"Orç": 41754, "Data": "2026-02-03", "Cod.": 9230, "Cliente": "CONSTRUTORA PIA", "Contato": "LUIZ LOURE 41-99109-1542", "UF": "PR", "Valor Total": 21999.81, "Pedido": null, "NF": null, "Status": "Pendente", "Empresa": "PARANÁ", "Follow Up": "2026-04-27", "Detalhes": "Sem retorno"}, {"Orç": 40016, "Data": "2026-01-23", "Cod.": 1172, "Cliente": "CWG CONSTRUTORA", "Contato": "DAIANY AFO 41-98740-1556", "UF": "PR", "Valor Total": 41727.25, "Pedido": null, "NF": null, "Status": "Finalizado", "Empresa": "PARANÁ", "Follow Up": null, "Detalhes": null}, {"Orç": 40017, "Data": "2026-01-23", "Cod.": 1172, "Cliente": "CWG CONSTRUTORA", "Contato": "DAIANY AFO 41-98740-1556", "UF": "PR", "Valor Total": 106051.25, "Pedido": null, "NF": null, "Status": "Finalizado", "Empresa": "PARANÁ", "Follow Up": null, "Detalhes": null}, {"Orç": 41552, "Data": "2026-01-22", "Cod.": 9076, "Cliente": "CONSTRUTORA E I", "Contato": "THIAGO JUL 0-", "UF": "PR", "Valor Total": 9083.81, "Pedido": null, "NF": null, "Status": "Finalizado", "Empresa": "PARANÁ", "Follow Up": null, "Detalhes": null}, {"Orç": 41511, "Data": "2026-01-20", "Cod.": 6360, "Cliente": "IDEAL INCORPORA", "Contato": "VLADIMIR 41-3014-6434 9243-2360", "UF": "PR", "Valor Total": 3225.6, "Pedido": "21401  -  Aguard.coleta  - 3.225,60", "NF": 3949, "Status": "Finalizado", "Empresa": "PARANÁ", "Follow Up": null, "Detalhes": null}, {"Orç": 41516, "Data": "2026-01-20", "Cod.": 15166, "Cliente": "SENHOR REPAROS", "Contato": "ANTONIO 41-98452-6540", "UF": "PR", "Valor Total": 3124, "Pedido": "21404  -  Aguard.coleta  - 3.124,00", "NF": null, "Status": "Finalizado", "Empresa": "PARANÁ", "Follow Up": null, "Detalhes": null}, {"Orç": 41273, "Data": "2026-01-16", "Cod.": 9076, "Cliente": "CONSTRUTORA E I", "Contato": "THIAGO JUL 0-", "UF": "PR", "Valor Total": 26478.5, "Pedido": "21394  -  Aguard.coleta  - 26.478,50", "NF": 3948, "Status": "Finalizado", "Empresa": "PARANÁ", "Follow Up": null, "Detalhes": null}, {"Orç": 42613, "Data": "2026-04-14", "Cod.": 16036, "Cliente": "ROTTAS 3 CONSTR", "Contato": "ELIAS  41-9990-2670", "UF": "PR", "Valor Total": 2519.04, "Pedido": "21936  -  Aguard.coleta  - 2.519,04", "NF": 6174, "Status": "Finalizado", "Empresa": "GVTECK", "Follow Up": null, "Detalhes": null}, {"Orç": 42612, "Data": "2026-04-10", "Cod.": 13297, "Cliente": "CAMARGO JUNIOR", "Contato": "VERÓNICA-+595 973 537007", "UF": "PR", "Valor Total": 6511.6, "Pedido": null, "NF": null, "Status": "Pendente", "Empresa": "GVTECK", "Follow Up": "2026-04-22", "Detalhes": "Negociação "}, {"Orç": 42592, "Data": "2026-04-09", "Cod.": 13297, "Cliente": "CAMARGO JUNIOR", "Contato": "MARIELA 0-+595 973 537007", "UF": "PR", "Valor Total": 6962.4, "Pedido": null, "NF": null, "Status": "Finalizado", "Empresa": "GVTECK", "Follow Up": null, "Detalhes": null}, {"Orç": 42375, "Data": "2026-03-25", "Cod.": 6613, "Cliente": "MULTICON INCORP", "Contato": "FERNANDO 41-3082-6868", "UF": "PR", "Valor Total": 349.19, "Pedido": "21820  -  Aguard.coleta  - 349,19", "NF": 6147, "Status": "Finalizado", "Empresa": "GVTECK", "Follow Up": null, "Detalhes": null}, {"Orç": 42370, "Data": "2026-03-24", "Cod.": 6613, "Cliente": "MULTICON INCORP", "Contato": "FERNANDO 41-3082-6868", "UF": "PR", "Valor Total": 349.17, "Pedido": "21816  -  Emitir NF  - 349,17", "NF": null, "Status": "Finalizado", "Empresa": "GVTECK", "Follow Up": null, "Detalhes": null}, {"Orç": 41824, "Data": "2026-02-09", "Cod.": 14660, "Cliente": "HYPE T105257 SP", "Contato": "LUIZ KLOC  41-9179-4008", "UF": "PR", "Valor Total": 10702.4, "Pedido": null, "NF": null, "Status": "Finalizado", "Empresa": "GVTECK", "Follow Up": null, "Detalhes": null}, {"Orç": 41750, "Data": "2026-02-03", "Cod.": 6613, "Cliente": "MULTICON INCORP", "Contato": "FERNANDO 41-3082-6868", "UF": "PR", "Valor Total": 3618.53, "Pedido": "21502  -  Aguard.coleta  - 3.618,53", "NF": 6019, "Status": "Finalizado", "Empresa": "GVTECK", "Follow Up": null, "Detalhes": null}, {"Orç": 41462, "Data": "2026-01-16", "Cod.": 6613, "Cliente": "MULTICON INCORP", "Contato": "FERNANDO 41-3082-6868", "UF": "PR", "Valor Total": 1619.99, "Pedido": "21391  -  Aguard.coleta  - 1.619,99", "NF": 5970, "Status": "Finalizado", "Empresa": "GVTECK", "Follow Up": null, "Detalhes": null}, {"Orç": 41480, "Data": "2026-01-16", "Cod.": 14311, "Cliente": "55.840.876 MICH", "Contato": "MIKE CELLA 41-9719-5103", "UF": "PR", "Valor Total": 6696, "Pedido": "21392  -  Pendente  - 6.696,00", "NF": null, "Status": "Finalizado", "Empresa": "GVTECK", "Follow Up": null, "Detalhes": null}, {"Orç": 41481, "Data": "2026-01-16", "Cod.": 14311, "Cliente": "55.840.876 MICH", "Contato": "MIKE CELLA 41-9719-5103", "UF": "PR", "Valor Total": 6696, "Pedido": "21393  -  Aguard.coleta  - 6.696,00", "NF": 5972, "Status": "Finalizado", "Empresa": "GVTECK", "Follow Up": null, "Detalhes": null}, {"Orç": 42710, "Data": "2026-04-17", "Cod.": 14489, "Cliente": "EDIFICIO CIVIC HALL", "Contato": "JORGE 41 8812-4000", "UF": "PR", "Valor Total": 59531, "Pedido": null, "NF": null, "Status": "Pendente", "Empresa": "SOLAR", "Follow Up": "2026-04-23", "Detalhes": "Negociação "}, {"Orç": 42664, "Data": "2026-04-15", "Cod.": 15038, "Cliente": "THE SUNSET ", "Contato": "ALISSON MA 41-99735-1370", "UF": "PR", "Valor Total": 480, "Pedido": null, "NF": null, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": null}, {"Orç": 42663, "Data": "2026-04-15", "Cod.": 10024, "Cliente": "BRICKELL", "Contato": "GERALDO 41-9907-6145", "UF": "PR", "Valor Total": 1147.2, "Pedido": null, "NF": null, "Status": "Pendente", "Empresa": "SOLAR", "Follow Up": "2026-04-23", "Detalhes": "Negociação "}, {"Orç": 21954, "Data": "2026-04-17", "Cod.": 2878, "Cliente": "FENGE", "Contato": "IVETE 41-9196-9002", "UF": "PR", "Valor Total": 4965, "Pedido": null, "NF": null, "Status": "Finalizado", "Empresa": "SOLAR", "Follow Up": null, "Detalhes": "GVTECK"}];
+function salvarBackup(){
+  try{
+    const payload={V,nextId,ts:Date.now()};
+    localStorage.setItem('orc_2026_backup',JSON.stringify(payload));
+    if(window.fbSave) window.fbSave(payload);
+    const btn=document.getElementById('btn-backup');
+    btn.textContent='Salvo!';
+    btn.style.background='#EAF3DE';btn.style.borderColor='#3B6D11';btn.style.color='#3B6D11';
+    setTimeout(()=>{btn.textContent='Salvar';btn.style.background='#E6F1FB';btn.style.borderColor='#185FA5';btn.style.color='#185FA5';},2000);
+  }catch(e){}
+}
+function loadData(){try{const s=localStorage.getItem('orc_2026_v1');if(s)return JSON.parse(s);}catch(e){}return null;}
+function saveData(){
+  try{
+    const payload={V,nextId,ts:Date.now()};
+    localStorage.setItem('orc_2026_v1',JSON.stringify(payload));
+    const el=document.getElementById('save-status');
+    el.textContent='Salvo';el.style.background='#EAF3DE';el.style.color='#3B6D11';
+    if(window.fbSave) window.fbSave(payload);
+  }catch(e){}
+}
+function resetDados(){
+  const backup=localStorage.getItem('orc_2026_backup');
+  if(backup){
+    if(!confirm('Restaurar para o último ponto salvo com o botão "Salvar"?\n\nSe quiser apagar tudo e voltar à planilha original, clique em Cancelar e remova o backup manualmente.'))return;
+    const parsed=JSON.parse(backup);
+    V=parsed.V;nextId=parsed.nextId;
+    localStorage.setItem('orc_2026_v1',backup);
+    const el=document.getElementById('save-status');el.textContent='Restaurado';el.style.background='#E6F1FB';el.style.color='#185FA5';
+  } else {
+    if(!confirm('Nenhum backup salvo encontrado.\nResetar para os dados originais da planilha?'))return;
+    localStorage.removeItem('orc_2026_v1');
+    V=JSON.parse(JSON.stringify(DD));nextId=Math.max(...V.map(r=>r['Orç']))+1;
+    saveData();
+  }
+  go('dashboard');
+}
+const saved=loadData();
+let V=saved?saved.V:JSON.parse(JSON.stringify(DD));
+let nextId=saved?saved.nextId:Math.max(...DD.map(r=>r['Orç']))+1;
+const fmt=v=>v?'R$ '+v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):'—';
+const fmtd=d=>d?d.split('-').reverse().join('/'):'—';
+const statusBadge=s=>s==='Finalizado'?'<span class="badge bg">Finalizado</span>':'<span class="badge ba">Pendente</span>';
+const EC={SOLAR:'#185FA5',PARANÁ:'#3B6D11',TOPFORTE:'#854F0B',GVTECK:'#5F5E5A'};
+let ci=null,ce=null;
+function go(t){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  ['dashboard','orcamentos','clientes','empresas','novo'].forEach((tab,i)=>{if(tab===t)document.querySelectorAll('.nav button')[i].classList.add('active');});
+  if(t==='dashboard')renderDash();
+  if(t==='orcamentos')renderO();
+  if(t==='clientes')renderC();
+  if(t==='empresas')renderEmp();
+}
+function renderDash(){
+  const fin=V.filter(r=>r.Status==='Finalizado');
+  const pen=V.filter(r=>r.Status==='Pendente');
+  const totFin=fin.reduce((a,r)=>a+(r['Valor Total']||0),0);
+  const totPen=pen.reduce((a,r)=>a+(r['Valor Total']||0),0);
+  const total=totFin+totPen;
+  const taxa=V.length?Math.round(fin.length/V.length*100):0;
+  document.getElementById('mg').innerHTML=`
+    <div class="metric"><div class="lbl">Total geral</div><div class="val">R$ ${(total/1e6).toFixed(2)}M</div><div class="sub">${V.length} orçamentos</div></div>
+    <div class="metric"><div class="lbl">Finalizado</div><div class="val" style="color:#3B6D11">R$ ${(totFin/1e6).toFixed(2)}M</div><div class="sub">${fin.length} orçamentos</div></div>
+    <div class="metric"><div class="lbl">Pendente</div><div class="val" style="color:#854F0B">R$ ${(totPen/1e6).toFixed(2)}M</div><div class="sub">${pen.length} orçamentos</div></div>
+    <div class="metric"><div class="lbl">Taxa de conversão</div><div class="val">${taxa}%</div><div class="sub">finalizados / total</div></div>
+  `;
+  const ms=['Jan','Fev','Mar','Abr'],mn=[1,2,3,4];
+  const dF=mn.map(m=>Math.round(V.filter(r=>r.Status==='Finalizado'&&r.Data&&parseInt(r.Data.split('-')[1])===m).reduce((a,r)=>a+(r['Valor Total']||0),0)));
+  const dP=mn.map(m=>Math.round(V.filter(r=>r.Status==='Pendente'&&r.Data&&parseInt(r.Data.split('-')[1])===m).reduce((a,r)=>a+(r['Valor Total']||0),0)));
+  if(ci)ci.destroy();
+  ci=new Chart(document.getElementById('chartR'),{type:'bar',data:{labels:ms,datasets:[{label:'Finalizado',data:dF,backgroundColor:'#3B6D11',borderRadius:3},{label:'Pendente',data:dP,backgroundColor:'#854F0B',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:11},boxWidth:10,padding:12}}},scales:{y:{ticks:{callback:v=>'R$'+(v/1000).toFixed(0)+'k',font:{size:10}},grid:{color:'rgba(0,0,0,.05)'}},x:{ticks:{font:{size:11}},grid:{display:false}}}}});
+  const emps=['SOLAR','PARANÁ','TOPFORTE','GVTECK'];
+  const eF=emps.map(e=>Math.round(V.filter(r=>r.Empresa===e&&r.Status==='Finalizado').reduce((a,r)=>a+(r['Valor Total']||0),0)));
+  const eP=emps.map(e=>Math.round(V.filter(r=>r.Empresa===e&&r.Status==='Pendente').reduce((a,r)=>a+(r['Valor Total']||0),0)));
+  if(ce)ce.destroy();
+  ce=new Chart(document.getElementById('chartE'),{type:'bar',data:{labels:emps,datasets:[{label:'Finalizado',data:eF,backgroundColor:'#185FA5',borderRadius:3},{label:'Pendente',data:eP,backgroundColor:'#B5D4F4',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{labels:{font:{size:11},boxWidth:10,padding:12}}},scales:{x:{ticks:{callback:v=>'R$'+(v/1000).toFixed(0)+'k',font:{size:10}},grid:{color:'rgba(0,0,0,.05)'}},y:{ticks:{font:{size:11}},grid:{display:false}}}}});
+  const stages=[{l:'Total orçamentos',n:V.length,col:'#3266AD'},{l:'Pendentes',n:pen.length,col:'#854F0B'},{l:'Finalizados',n:fin.length,col:'#3B6D11'}];
+  document.getElementById('funnel').innerHTML=stages.map(s=>`<div class="fbar"><div class="flbl">${s.l}</div><div class="ftrack"><div class="ffill" style="width:${Math.round(s.n/V.length*100)}%;background:${s.col}">${s.n}</div></div></div>`).join('');
+  const byC={};
+  V.filter(r=>r.Status==='Pendente').forEach(r=>{byC[r.Cliente]=(byC[r.Cliente]||0)+(r['Valor Total']||0);});
+  const top5=Object.entries(byC).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const mxV=top5[0]?.[1]||1;
+  document.getElementById('top5').innerHTML=top5.map(([c,v])=>`<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span style="font-weight:500">${c}</span><span style="color:var(--text2)">${fmt(v)}</span></div><div style="background:var(--bg3);border-radius:3px;height:6px;overflow:hidden"><div style="width:${Math.round(v/mxV*100)}%;background:#185FA5;height:100%;border-radius:3px"></div></div></div>`).join('');
+}
+function renderO(){
+  const q=(document.getElementById('busca')?.value||'').toLowerCase();
+  const fs=document.getElementById('fstat')?.value||'';
+  const fe=document.getElementById('femp')?.value||'';
+  let lista=V;
+  if(q)lista=lista.filter(r=>(r.Cliente||'').toLowerCase().includes(q)||(r.Empresa||'').toLowerCase().includes(q)||(r.Contato||'').toLowerCase().includes(q)||String(r['Orç']).includes(q));
+  if(fs)lista=lista.filter(r=>r.Status===fs);
+  if(fe)lista=lista.filter(r=>r.Empresa===fe);
+  lista=[...lista].sort((a,b)=>{const fa=a['Follow Up']||'9999';const fb=b['Follow Up']||'9999';return fa.localeCompare(fb);});
+  document.getElementById('otbody').innerHTML=lista.map(r=>`<tr class="edrow" onclick="openModal(${r['Orç']})"><td>${r['Orç']}</td><td title="${r.Cliente||''}">${r.Cliente||'—'}</td><td><span class="badge" style="background:${EC[r.Empresa]||'#888'}22;color:${EC[r.Empresa]||'#888'};font-size:10px">${r.Empresa||'—'}</span></td><td>${fmtd(r.Data)}</td><td>${fmt(r['Valor Total'])}</td><td>${statusBadge(r.Status)}</td><td style="font-size:11px;color:var(--text2)">${fmtd(r['Follow Up'])}</td><td title="${r.Detalhes||''}" style="font-size:11.5px;color:var(--text2)">${r.Detalhes||'—'}</td><td>${r.UF||'—'}</td></tr>`).join('')||'<tr><td colspan="9" style="text-align:center;color:var(--text2);padding:20px">Nenhum resultado.</td></tr>';
+  document.getElementById('ocount').textContent=`${lista.length} registros`;
+  const tF=lista.filter(r=>r.Status==='Finalizado').reduce((a,r)=>a+(r['Valor Total']||0),0);
+  const tP=lista.filter(r=>r.Status==='Pendente').reduce((a,r)=>a+(r['Valor Total']||0),0);
+  document.getElementById('ototals').textContent=`Finalizado: ${fmt(tF)}   |   Pendente: ${fmt(tP)}`;
+}
+function renderC(){
+  const q=(document.getElementById('busca-cli')?.value||'').toLowerCase();
+  const fs=document.getElementById('fclis')?.value||'';
+  const m={};
+  V.forEach(r=>{if(!m[r.Cliente])m[r.Cliente]={n:r.Cliente,fin:0,pen:0,count:0,emps:new Set()};if(r.Status==='Finalizado')m[r.Cliente].fin+=(r['Valor Total']||0);else m[r.Cliente].pen+=(r['Valor Total']||0);m[r.Cliente].count++;if(r.Empresa)m[r.Cliente].emps.add(r.Empresa);});
+  let lista=Object.values(m);
+  if(q)lista=lista.filter(c=>c.n.toLowerCase().includes(q));
+  if(fs==='fin')lista=lista.filter(c=>c.fin>0);
+  if(fs==='pen')lista=lista.filter(c=>c.pen>0);
+  lista.sort((a,b)=>(b.fin+b.pen)-(a.fin+a.pen));
+  document.getElementById('ctbody').innerHTML=lista.map(c=>{const tot=c.fin+c.pen;const tier=tot>=500000?'<span class="badge bb">Platinum</span>':tot>=100000?'<span class="badge ba">Gold</span>':tot>=30000?'<span class="badge bg">Silver</span>':'<span class="badge bsi">Bronze</span>';return`<tr class="edrow" onclick="filterByClient('${c.n.replace(/'/g,"\\'")}')"><td title="${c.n}">${c.n}</td><td>${fmt(tot)}</td><td style="color:#3B6D11">${fmt(c.fin)}</td><td style="color:#854F0B">${fmt(c.pen)}</td><td>${c.count}</td><td style="font-size:11px">${[...c.emps].join(', ')}</td><td>${tier}</td></tr>`;}).join('');
+}
+function renderEmp(){
+  const emps=['SOLAR','PARANÁ','TOPFORTE','GVTECK'];
+  const rows=emps.map(e=>{const rs=V.filter(r=>r.Empresa===e);const fin=rs.filter(r=>r.Status==='Finalizado').reduce((a,r)=>a+(r['Valor Total']||0),0);const pen=rs.filter(r=>r.Status==='Pendente').reduce((a,r)=>a+(r['Valor Total']||0),0);const conv=rs.length?Math.round(rs.filter(r=>r.Status==='Finalizado').length/rs.length*100):0;const tk=rs.length?Math.round((fin+pen)/rs.length):0;return{e,fin,pen,count:rs.length,conv,tk,total:fin+pen};});
+  document.getElementById('emm').innerHTML=rows.map(r=>`<div class="metric"><div class="lbl">${r.e}</div><div class="val" style="color:${EC[r.e]}">${fmt(r.total)}</div><div class="sub">${r.count} orç. | ${r.conv}% conv.</div></div>`).join('');
+  document.getElementById('etbody').innerHTML=rows.map(r=>`<tr><td><span style="font-weight:500;color:${EC[r.e]}">${r.e}</span></td><td>${fmt(r.total)}</td><td style="color:#3B6D11">${fmt(r.fin)}</td><td style="color:#854F0B">${fmt(r.pen)}</td><td>${r.count}</td><td><span class="badge" style="background:${r.conv>=60?'#EAF3DE':r.conv>=40?'#FAEEDA':'#FCEBEB'};color:${r.conv>=60?'#3B6D11':r.conv>=40?'#854F0B':'#A32D2D'}">${r.conv}%</span></td><td>R$ ${r.tk.toLocaleString('pt-BR')}</td></tr>`).join('');
+}
+function addOrc(){
+  const noc=parseInt(document.getElementById('fnoc').value);
+  const data=document.getElementById('fdata').value;
+  const cli=document.getElementById('fcli').value.trim();
+  const cod=parseInt(document.getElementById('fcod').value)||null;
+  const cont=document.getElementById('fcont').value.trim();
+  const uf=document.getElementById('fuf').value;
+  const emp=document.getElementById('fempn').value;
+  const val=parseFloat(document.getElementById('fval').value);
+  const stat=document.getElementById('fst').value;
+  const fu=document.getElementById('ffu').value||null;
+  const det=document.getElementById('fdet').value.trim()||null;
+  const msg=document.getElementById('fmsg');
+  if(!noc||!data||!cli||!val){msg.style.color='#A32D2D';msg.textContent='Preencha os campos obrigatórios (*).';return;}
+  V.push({'Orç':noc,'Data':data,'Cod.':cod,'Cliente':cli,'Contato':cont,'UF':uf,'Valor Total':val,'Pedido':null,'NF':null,'Status':stat,'Empresa':emp,'Follow Up':fu,'Detalhes':det});
+  saveData();
+  msg.style.color='#3B6D11';msg.textContent='Orçamento salvo com sucesso!';
+  ['fnoc','fcli','fcod','fcont','fval','ffu','fdet'].forEach(id=>document.getElementById(id).value='');
+  setTimeout(()=>msg.textContent='',3000);
+}
+function filterByClient(name){
+  go('orcamentos');
+  setTimeout(()=>{
+    document.getElementById('busca').value=name;
+    document.getElementById('fstat').value='';
+    document.getElementById('femp').value='';
+    renderO();
+  },50);
+}
+let modalId=null;
+function openModal(id){
+  const r=V.find(x=>x['Orç']===id);
+  if(!r)return;
+  modalId=id;
+  document.getElementById('m-noc').value=r['Orç'];
+  document.getElementById('m-data').value=r.Data||'';
+  document.getElementById('m-cli').value=r.Cliente||'';
+  document.getElementById('m-cod').value=r['Cod.']||'';
+  document.getElementById('m-cont').value=r.Contato||'';
+  document.getElementById('m-uf').value=r.UF||'';
+  document.getElementById('m-emp').value=r.Empresa||'';
+  document.getElementById('m-val').value=r['Valor Total']||'';
+  document.getElementById('m-stat').value=r.Status||'Pendente';
+  document.getElementById('m-fu').value=r['Follow Up']||'';
+  document.getElementById('m-ped').value=r.Pedido||'';
+  document.getElementById('m-det').value=r.Detalhes||'';
+  document.getElementById('m-err').textContent='';
+  document.getElementById('modal-title').textContent=`Editar orçamento #${id}`;
+  document.getElementById('modal-orc').style.display='flex';
+}
+function closeModal(){
+  document.getElementById('modal-orc').style.display='none';
+  modalId=null;
+}
+function saveModal(){
+  const cli=document.getElementById('m-cli').value.trim();
+  const val=parseFloat(document.getElementById('m-val').value);
+  if(!cli||!val){document.getElementById('m-err').textContent='Cliente e Valor Total são obrigatórios.';return;}
+  const idx=V.findIndex(x=>x['Orç']===modalId);
+  if(idx===-1)return;
+  V[idx]={
+    ...V[idx],
+    'Data':document.getElementById('m-data').value||V[idx].Data,
+    'Cliente':cli,
+    'Cod.':parseInt(document.getElementById('m-cod').value)||V[idx]['Cod.'],
+    'Contato':document.getElementById('m-cont').value.trim()||null,
+    'UF':document.getElementById('m-uf').value,
+    'Empresa':document.getElementById('m-emp').value,
+    'Valor Total':val,
+    'Status':document.getElementById('m-stat').value,
+    'Follow Up':document.getElementById('m-fu').value||null,
+    'Pedido':document.getElementById('m-ped').value.trim()||null,
+    'Detalhes':document.getElementById('m-det').value.trim()||null,
+  };
+  saveData();
+  closeModal();
+  renderO();
+  const ss=document.getElementById('save-status');
+  ss.textContent='Alterações salvas';
+  ss.style.background='#EAF3DE';ss.style.color='#3B6D11';
+}
+function delFromModal(){
+  if(!confirm(`Excluir orçamento #${modalId}?`))return;
+  V=V.filter(r=>r['Orç']!==modalId);
+  saveData();
+  closeModal();
+  renderO();
+}
+function delOrc(id){
+  if(!confirm(`Excluir orçamento #${id}?`))return;
+  V=V.filter(r=>r['Orç']!==id);
+  saveData();
+  renderO();
+}
+document.getElementById('fdata').value=new Date().toISOString().split('T')[0];
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+renderDash();
+</script>
+<script type="module">
+  import { initializeApp }                                  from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+  import { getAnalytics }                                   from "https://www.gstatic.com/firebasejs/12.12.1/firebase-analytics.js";
+  import { getDatabase, ref, set, get }                     from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
+  import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
+
+  // Firebase configuration
+  const firebaseConfig = {
+    apiKey:            "AIzaSyAQP6iSAnKZz7cVixoJksFzmr-yslWBdAw",
+    authDomain:        "oifibra-6596b.firebaseapp.com",
+    databaseURL:       "https://oifibra-6596b-default-rtdb.firebaseio.com",
+    projectId:         "oifibra-6596b",
+    storageBucket:     "oifibra-6596b.firebasestorage.app",
+    messagingSenderId: "872235230359",
+    appId:             "1:872235230359:web:ec054b494a5190c6d775d2",
+    measurementId:     "G-6P6XQHTKZW"
+  };
+
+  // Initialize Firebase
+  const app       = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+  const db        = getDatabase(app);
+  const auth      = getAuth(app);
+
+  // ── Login anônimo automático (nos bastidores) ─────────────────────────
+  // Sem usuário autenticado o RTDB rejeita leitura/escrita.
+  onAuthStateChanged(auth, async user => {
+    if (!user) return;
+
+    // Expõe fbSave para o restante do site
+    window.fbSave = async function(data) {
+      try {
+        await set(ref(db, "orcamentos/dados_2026"), data);
+        return true;
+      } catch(e) {
+        console.error("Firebase save error:", e);
+        return false;
+      }
+    };
+
+    // Expõe fbLoad para o restante do site
+    window.fbLoad = async function() {
+      try {
+        const snap = await get(ref(db, "orcamentos/dados_2026"));
+        if (snap.exists()) return snap.val();
+      } catch(e) {
+        console.error("Firebase load error:", e);
+      }
+      return null;
+    };
+
+    // Sincroniza ao abrir: usa o dado mais recente (local vs remoto)
+    const remote  = await window.fbLoad();
+    if (!remote) return;
+
+    const local   = localStorage.getItem('orc_2026_v1');
+    const localTs = local ? (JSON.parse(local).ts || 0) : 0;
+
+    if ((remote.ts || 0) > localTs) {
+      localStorage.setItem('orc_2026_v1', JSON.stringify(remote));
+      V      = remote.V;
+      nextId = remote.nextId;
+      renderDash();
+      const el        = document.getElementById('save-status');
+      el.textContent  = 'Sincronizado ☁';
+      el.style.background = '#E6F1FB';
+      el.style.color  = '#185FA5';
+      setTimeout(() => {
+        el.textContent      = 'Salvo';
+        el.style.background = '#EAF3DE';
+        el.style.color      = '#3B6D11';
+      }, 2500);
+    }
+  });
+
+  signInAnonymously(auth).catch(e => console.error("Auth error:", e));
+</script>
+</body>
+</html>
